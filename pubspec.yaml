@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  excel: ^2.1.0      # <-- เพิ่มบรรทัดนี้ สำหรับใช้งาน Excel
 
 dev_dependencies:
   flutter_test:
@@ -21,3 +22,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mylogo.png
+    - assets/students.xlsx   # <-- เพิ่มบรรทัดนี้ สำหรับไฟล์ Excel (ต้องวางไฟล์ในโฟลเดอร์นี้)
