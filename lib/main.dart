@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'dart:typed_data';
 
 // --------- Student Model ---------
 class Student {
   final String id;
   final String name;
+  final String room;
+  Uint8List? image;
 
-  Student({required this.id, required this.name});
+  Student({required this.id, required this.name, required this.room, this.image});
 }
 
-// --------- Main App & Routing ---------
+// --------- main() ---------
 void main() {
   runApp(MyApp());
 }
@@ -61,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('โดนGuหลอกja', style: TextStyle(fontSize: 26, color: Colors.white)),
+                Text('ระบบรายชื่อนักเรียน', style: TextStyle(fontSize: 26, color: Colors.white)),
                 SizedBox(height: 16),
                 CircleAvatar(
                   radius: 80,
@@ -105,20 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text('เข้าสู่ระบบ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () {},
-                      child: Text('ลืมรหัสผ่าน?', style: TextStyle(color: Color(0xFF2196F3), decoration: TextDecoration.underline)),
-                    ),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Text('สมัครสมาชิก', style: TextStyle(color: Color(0xFF2196F3), decoration: TextDecoration.underline)),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -150,7 +139,7 @@ class _ListScreenState extends State<ListScreen> {
   }
 
   Future<void> loadStudentsFromExcel() async {
-    final data = await rootBundle.load('assets/students.xlsx');
+    final data = await rootBundle.load('assets/students_by_class_fixed.xlsx');
     final bytes = data.buffer.asUint8List();
     final excel = Excel.decodeBytes(bytes);
     final sheet = excel.tables[excel.tables.keys.first]!;
@@ -159,8 +148,9 @@ class _ListScreenState extends State<ListScreen> {
     for (var row in sheet.rows.skip(1)) {
       final id = row[0]?.value.toString() ?? '';
       final name = row[1]?.value.toString() ?? '';
-      if (id.isNotEmpty && name.isNotEmpty) {
-        loaded.add(Student(id: id, name: name));
+      final room = row[2]?.value.toString() ?? '';
+      if (id.isNotEmpty && name.isNotEmpty && room.isNotEmpty) {
+        loaded.add(Student(id: id, name: name, room: room));
       }
     }
     setState(() {
@@ -169,14 +159,81 @@ class _ListScreenState extends State<ListScreen> {
     });
   }
 
+  Future<Uint8List?> pickAndCropImage() async {
+    // TODO: เขียนให้รองรับกล้องหรือไฟล์จริง
+    return null;
+  }
+
+  void downloadAllImages() {
+    final readyImages = students.where((s) => s.image != null).toList();
+    if (readyImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ยังไม่มีรูปภาพที่ถ่ายหรืออัปโหลด!')),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('รวมรูปทั้งหมด'),
+        content: Text('สมมติว่าบันทึกรูป ${readyImages.length} ไฟล์ไปยังเครื่องแล้ว'),
+      ),
+    );
+  }
+
+  String extractLevel(String room) {
+    if (room.contains('อนุบาล')) return 'อนุบาล';
+    if (room.contains('ประถม')) return 'ประถม';
+    if (room.contains('มัธยม')) return 'มัธยม';
+    return 'อื่นๆ';
+  }
+
+  String extractYear(String room) {
+    final reg = RegExp(r'(อนุบาล|ประถม|มัธยม) ?(\d+)');
+    final m = reg.firstMatch(room);
+    if (m != null) {
+      if (m.group(1) == 'อนุบาล') return 'อนุบาล${m.group(2)}';
+      if (m.group(1) == 'ประถม') return 'ป.${m.group(2)}';
+      if (m.group(1) == 'มัธยม') return 'ม.${m.group(2)}';
+    }
+    return 'อื่นๆ';
+  }
+
+  String extractRoom(String room) {
+    final reg = RegExp(r'(\d+/\d+)');
+    final m = reg.firstMatch(room);
+    if (m != null) return m.group(1) ?? room;
+    return room;
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = students.where((n) {
-      final name = n.name.trim().toLowerCase();
-      final id = n.id.trim();
+      bool matchLevel = (level == 'ระดับชั้น') || (extractLevel(n.room) == level);
+      bool matchYear  = (year == 'ชั้นปี')     || (extractYear(n.room) == year);
+      bool matchRoom  = (room == 'ห้อง')      || (extractRoom(n.room) == room);
       final q = query.trim().toLowerCase();
-      return name.contains(q) || id.contains(query.trim());
+      bool matchQuery = n.name.toLowerCase().contains(q)
+          || n.id.contains(q)
+          || n.room.toLowerCase().contains(q);
+      return matchLevel && matchYear && matchRoom && matchQuery;
     }).toList();
+
+    final levelOptions = ['ระดับชั้น', ...{
+      ...students.map((s) => extractLevel(s.room))
+    }..remove('อื่นๆ')];
+    final yearOptions = ['ชั้นปี', ...{
+      ...students.where((s) => level == 'ระดับชั้น' || extractLevel(s.room) == level)
+          .map((s) => extractYear(s.room))
+    }..remove('อื่นๆ')];
+    final roomOptions = ['ห้อง', ...{
+      ...students.where((s) =>
+      (level == 'ระดับชั้น' || extractLevel(s.room) == level) &&
+          (year == 'ชั้นปี' || extractYear(s.room) == year)
+      ).map((s) => extractRoom(s.room))
+    }];
+
+    final studentsWithImage = students.where((s) => s.image != null).toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -196,11 +253,18 @@ class _ListScreenState extends State<ListScreen> {
           children: [
             Row(
               children: [
-                Expanded(child: DropdownMenuBox(value: level, options: ['อนุบาล', 'ประถม', 'มัธยม'], onChanged: (v) => setState(() { level = v; year = 'ชั้นปี'; room = 'ห้อง'; }))),
+                Expanded(child: DropdownMenuBox(value: level, options: levelOptions, onChanged: (v) => setState(() {
+                  level = v;
+                  year = 'ชั้นปี';
+                  room = 'ห้อง';
+                }))),
                 SizedBox(width: 8),
-                Expanded(child: DropdownMenuBox(value: year, options: level == 'อนุบาล' ? ['อนุบาล1', 'อนุบาล2', 'อนุบาล3'] : level == 'ประถม' ? List.generate(6, (i) => 'ป.${i + 1}') : level == 'มัธยม' ? List.generate(6, (i) => 'ม.${i + 1}') : [], onChanged: (v) => setState(() { year = v; room = 'ห้อง'; }))),
+                Expanded(child: DropdownMenuBox(value: year, options: yearOptions, onChanged: (v) => setState(() {
+                  year = v;
+                  room = 'ห้อง';
+                }))),
                 SizedBox(width: 8),
-                Expanded(child: DropdownMenuBox(value: room, options: ['1/1', '1/2', '1/3', '1/4', '1/5', '1/6'], onChanged: (v) => setState(() { room = v; }))),
+                Expanded(child: DropdownMenuBox(value: room, options: roomOptions, onChanged: (v) => setState(() { room = v; }))),
               ],
             ),
             SizedBox(height: 12),
@@ -230,16 +294,59 @@ class _ListScreenState extends State<ListScreen> {
                         child: Text('${index + 1}', style: TextStyle(color: Colors.black)),
                       ),
                       title: Text(student.name, style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('รหัส: ${student.id}'),
+                      subtitle: Text('รหัส: ${student.id}  |  ห้อง: ${student.room}'),
                       trailing: IconButton(
                         icon: Icon(Icons.camera_alt),
-                        onPressed: () {
-                          // Handle camera tap
+                        onPressed: () async {
+                          Uint8List? img = await pickAndCropImage();
+                          if (img != null) {
+                            setState(() {
+                              student.image = img;
+                            });
+                          }
                         },
                       ),
                     ),
                   );
                 },
+              ),
+            ),
+
+            // -------- ปุ่มดาวน์โหลดสไตล์ใหม่ (โชว์ตลอดเวลา) --------
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Center(
+                child: SizedBox(
+                  width: 280,
+                  height: 90,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF42A5F5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 6,
+                      shadowColor: Colors.blueAccent.withOpacity(0.2),
+                    ),
+                    onPressed: downloadAllImages,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.arrow_downward, color: Colors.white, size: 34),
+                        SizedBox(height: 8),
+                        Text(
+                          'DOWNLOAD',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 22,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

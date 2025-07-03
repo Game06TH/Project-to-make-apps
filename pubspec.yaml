@@ -22,4 +22,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mylogo.png
-    - assets/students.xlsx   # <-- เพิ่มบรรทัดนี้ สำหรับไฟล์ Excel (ต้องวางไฟล์ในโฟลเดอร์นี้)
+    - assets/students_by_class_fixed.xlsx   # <-- เพิ่มบรรทัดนี้ สำหรับไฟล์ Excel (ต้องวางไฟล์ในโฟลเดอร์นี้)
