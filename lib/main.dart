@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 // --------- Student Model ---------
 class Student {
@@ -159,8 +160,36 @@ class _ListScreenState extends State<ListScreen> {
     });
   }
 
-  Future<Uint8List?> pickAndCropImage() async {
-    // TODO: เขียนให้รองรับกล้องหรือไฟล์จริง
+  // --- ฟังก์ชันเลือก/ถ่ายรูป (context ต้องส่งมาด้วย) ---
+  Future<Uint8List?> pickAndCropImage(BuildContext context) async {
+    final picker = ImagePicker();
+
+    // ให้ผู้ใช้เลือกว่าจะใช้กล้องหรือเลือกรูปจากแกลเลอรี่
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text('เลือกแหล่งรูปภาพ'),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, ImageSource.camera),
+            child: Row(
+              children: [Icon(Icons.camera_alt), SizedBox(width: 8), Text('ถ่ายรูปด้วยกล้อง')],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, ImageSource.gallery),
+            child: Row(
+              children: [Icon(Icons.image), SizedBox(width: 8), Text('เลือกรูปจากแกลเลอรี่')],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (source == null) return null;
+    final XFile? pickedFile = await picker.pickImage(source: source);
+    if (pickedFile != null) {
+      return await pickedFile.readAsBytes();
+    }
     return null;
   }
 
@@ -291,14 +320,16 @@ class _ListScreenState extends State<ListScreen> {
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: Color(0xFFB2EBF2),
-                        child: Text('${index + 1}', style: TextStyle(color: Colors.black)),
+                        child: student.image != null
+                            ? ClipOval(child: Image.memory(student.image!, fit: BoxFit.cover, width: 40, height: 40))
+                            : Text('${index + 1}', style: TextStyle(color: Colors.black)),
                       ),
                       title: Text(student.name, style: TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text('รหัส: ${student.id}  |  ห้อง: ${student.room}'),
                       trailing: IconButton(
                         icon: Icon(Icons.camera_alt),
                         onPressed: () async {
-                          Uint8List? img = await pickAndCropImage();
+                          Uint8List? img = await pickAndCropImage(context);
                           if (img != null) {
                             setState(() {
                               student.image = img;
