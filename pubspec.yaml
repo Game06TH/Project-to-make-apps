@@ -1,6 +1,6 @@
-name: student_list_app
+name: easy_crop_1
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
 
@@ -11,8 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  excel: ^2.1.0      # <-- สำหรับใช้งาน Excel
-  image_picker: ^1.0.7   # <-- เพิ่มบรรทัดนี้ สำหรับเลือกรูป/ถ่ายรูป
+  excel: ^2.0.4        # เพิ่ม dependency สำหรับ Excel
+  image_picker: ^0.8.5+3 # เพิ่ม dependency สำหรับ Image Picker
 
 dev_dependencies:
   flutter_test:
@@ -22,5 +22,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/mylogo.png
-    - assets/students_by_class_fixed.xlsx   # <-- สำหรับไฟล์ Excel
+    - assets/students_by_class_fixed.xlsx  # Path for Excel file
+    - assets/mylogo.png                   # Path for logo

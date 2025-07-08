@@ -20,6 +20,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -40,6 +42,8 @@ class MyApp extends StatelessWidget {
 
 // --------- Login Screen ---------
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -120,6 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
 // --------- List Screen ---------
 class ListScreen extends StatefulWidget {
+  const ListScreen({super.key});
+
   @override
   State<ListScreen> createState() => _ListScreenState();
 }
@@ -393,7 +399,7 @@ class DropdownMenuBox extends StatelessWidget {
   final List<String> options;
   final ValueChanged<String> onChanged;
 
-  const DropdownMenuBox({required this.value, required this.options, required this.onChanged});
+  const DropdownMenuBox({super.key, required this.value, required this.options, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {

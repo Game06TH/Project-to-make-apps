@@ -1,4 +1,4 @@
-# student_list_app
+# easy_crop_1
 
 A new Flutter project.
 
