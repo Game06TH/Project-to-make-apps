@@ -1,12 +1,12 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")  // เพิ่มปลั๊กอิน Firebase
 }
 
 android {
-    namespace = "com.example.easy_crop_1"
+    namespace = "com.example.easycrop"  // เปลี่ยนจาก "com.example.easy_crop_1"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,10 +20,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.easy_crop_1"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.example.easycrop"  // เปลี่ยนเป็นชื่อแพ็คเกจใหม่ที่นี่
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -32,13 +29,17 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
 
-flutter {
-    source = "../.."
+dependencies {
+    // Firebase BoM (Bill of Materials) เพื่อให้ใช้เวอร์ชันที่เหมาะสมของ Firebase SDK
+    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
+
+    // เพิ่ม Firebase SDK ที่ต้องการใช้
+    implementation("com.google.firebase:firebase-analytics")  // ตัวอย่าง Firebase Analytics
+    implementation("com.google.firebase:firebase-auth")  // ตัวอย่าง Firebase Authentication
+    // ถ้าต้องการใช้ Firebase Firestore หรือฟีเจอร์อื่น ๆ ก็ให้เพิ่ม dependencies ที่นี่
 }

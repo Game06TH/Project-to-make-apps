@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "925678225145",
+    "firebase_url": "https://idphoto-e5a75-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "idphoto-e5a75",
+    "storage_bucket": "idphoto-e5a75.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925678225145:android:e74038cd1c14353ae8c428",
+        "android_client_info": {
+          "package_name": "com.example.easycrop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSac8qdkg8CBFrYMQM9i46V5b4mcEIw7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,21 +1,21 @@
+buildscript {
+    repositories {
+        google()  // ใช้ในโปรเจคทั้งหมด
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:7.0.3"
+        classpath "com.google.gms:google-services:4.4.3"  // เพิ่มบรรทัดนี้สำหรับ Firebase
+    }
+}
+
 allprojects {
     repositories {
-        google()
+        google()  // ใช้ในโปรเจคทั้งหมด
         mavenCentral()
     }
 }
 
-val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
-rootProject.layout.buildDirectory.value(newBuildDir)
-
-subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
-subprojects {
-    project.evaluationDependsOn(":app")
-}
-
-tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }

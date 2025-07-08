@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+package="com.example.easycrop">
+
     <application
         android:label="easy_crop_1"
         android:name="${applicationName}"

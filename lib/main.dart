@@ -1,4 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';  // Firebase Analytics
+import 'package:firebase_auth/firebase_auth.dart';  // Firebase Authentication
+import 'package:cloud_firestore/cloud_firestore.dart';  // Firebase Firestore
 import 'package:excel/excel.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:typed_data';
@@ -15,7 +19,10 @@ class Student {
 }
 
 // --------- main() ---------
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();  // Firebase initialization
+
   runApp(MyApp());
 }
 
@@ -109,7 +116,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: Color(0xFF42A5F5),
                       elevation: 8,
                     ),
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/list'),
+                    onPressed: () async {
+                      // Firebase Authentication
+                      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                        email: email,
+                        password: password,
+                      );
+                      Navigator.pushReplacementNamed(context, '/list');
+                    },
                     child: Text('เข้าสู่ระบบ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
@@ -166,11 +180,10 @@ class _ListScreenState extends State<ListScreen> {
     });
   }
 
-  // --- ฟังก์ชันเลือก/ถ่ายรูป (context ต้องส่งมาด้วย) ---
+  // ฟังก์ชันเลือก/ถ่ายรูป (context ต้องส่งมาด้วย)
   Future<Uint8List?> pickAndCropImage(BuildContext context) async {
     final picker = ImagePicker();
 
-    // ให้ผู้ใช้เลือกว่าจะใช้กล้องหรือเลือกรูปจากแกลเลอรี่
     final source = await showDialog<ImageSource>(
       context: context,
       builder: (ctx) => SimpleDialog(
@@ -245,12 +258,12 @@ class _ListScreenState extends State<ListScreen> {
   Widget build(BuildContext context) {
     final filtered = students.where((n) {
       bool matchLevel = (level == 'ระดับชั้น') || (extractLevel(n.room) == level);
-      bool matchYear  = (year == 'ชั้นปี')     || (extractYear(n.room) == year);
-      bool matchRoom  = (room == 'ห้อง')      || (extractRoom(n.room) == room);
+      bool matchYear = (year == 'ชั้นปี') || (extractYear(n.room) == year);
+      bool matchRoom = (room == 'ห้อง') || (extractRoom(n.room) == room);
       final q = query.trim().toLowerCase();
-      bool matchQuery = n.name.toLowerCase().contains(q)
-          || n.id.contains(q)
-          || n.room.toLowerCase().contains(q);
+      bool matchQuery = n.name.toLowerCase().contains(q) ||
+          n.id.contains(q) ||
+          n.room.toLowerCase().contains(q);
       return matchLevel && matchYear && matchRoom && matchQuery;
     }).toList();
 
@@ -263,160 +276,27 @@ class _ListScreenState extends State<ListScreen> {
     }..remove('อื่นๆ')];
     final roomOptions = ['ห้อง', ...{
       ...students.where((s) =>
-      (level == 'ระดับชั้น' || extractLevel(s.room) == level) &&
+          (level == 'ระดับชั้น' || extractLevel(s.room) == level) &&
           (year == 'ชั้นปี' || extractYear(s.room) == year)
       ).map((s) => extractRoom(s.room))
     }];
 
-    final studentsWithImage = students.where((s) => s.image != null).toList();
-
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFF263238),
-        title: Text('รายการนักเรียน', style: TextStyle(color: Colors.white)),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        title: Text('รายการนักเรียน'),
       ),
       body: loading
           ? Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(child: DropdownMenuBox(value: level, options: levelOptions, onChanged: (v) => setState(() {
-                  level = v;
-                  year = 'ชั้นปี';
-                  room = 'ห้อง';
-                }))),
-                SizedBox(width: 8),
-                Expanded(child: DropdownMenuBox(value: year, options: yearOptions, onChanged: (v) => setState(() {
-                  year = v;
-                  room = 'ห้อง';
-                }))),
-                SizedBox(width: 8),
-                Expanded(child: DropdownMenuBox(value: room, options: roomOptions, onChanged: (v) => setState(() { room = v; }))),
-              ],
+          : ListView.builder(
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final student = filtered[index];
+                return ListTile(
+                  title: Text(student.name),
+                  subtitle: Text('รหัส: ${student.id} | ห้อง: ${student.room}'),
+                );
+              },
             ),
-            SizedBox(height: 12),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'ค้นหา...',
-                prefixIcon: Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey.shade200,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
-              onChanged: (v) => setState(() => query = v),
-            ),
-            SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filtered.length,
-                itemBuilder: (context, index) {
-                  final student = filtered[index];
-                  return Card(
-                    color: Color(0xFFE0F7FA),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Color(0xFFB2EBF2),
-                        child: student.image != null
-                            ? ClipOval(child: Image.memory(student.image!, fit: BoxFit.cover, width: 40, height: 40))
-                            : Text('${index + 1}', style: TextStyle(color: Colors.black)),
-                      ),
-                      title: Text(student.name, style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('รหัส: ${student.id}  |  ห้อง: ${student.room}'),
-                      trailing: IconButton(
-                        icon: Icon(Icons.camera_alt),
-                        onPressed: () async {
-                          Uint8List? img = await pickAndCropImage(context);
-                          if (img != null) {
-                            setState(() {
-                              student.image = img;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // -------- ปุ่มดาวน์โหลดสไตล์ใหม่ (โชว์ตลอดเวลา) --------
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              child: Center(
-                child: SizedBox(
-                  width: 280,
-                  height: 90,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF42A5F5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 6,
-                      shadowColor: Colors.blueAccent.withOpacity(0.2),
-                    ),
-                    onPressed: downloadAllImages,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.arrow_downward, color: Colors.white, size: 34),
-                        SizedBox(height: 8),
-                        Text(
-                          'DOWNLOAD',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 22,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// --------- DropdownMenuBox Widget ---------
-class DropdownMenuBox extends StatelessWidget {
-  final String value;
-  final List<String> options;
-  final ValueChanged<String> onChanged;
-
-  const DropdownMenuBox({super.key, required this.value, required this.options, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      value: options.contains(value) ? value : null,
-      hint: Text(value),
-      items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-      onChanged: (v) { if (v != null) onChanged(v); },
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.blue.shade50,
-        contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      dropdownColor: Colors.blue.shade50,
-      icon: Icon(Icons.arrow_drop_down, color: Colors.black),
-      style: TextStyle(color: Colors.black),
     );
   }
 }
