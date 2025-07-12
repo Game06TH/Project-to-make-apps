@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:firebase_core/firebase_core.dart'; // เพิ่มสำหรับ Firebase
 import 'dart:typed_data';
+
+// --------- Firebase Config ---------
+const firebaseConfig = FirebaseOptions(
+  apiKey: "AIzaSyCSac8qdkg8CBFrYMQM9i46V5b4mcEIw7I",
+  authDomain: "idphoto-e5a75.firebaseapp.com",
+  projectId: "idphoto-e5a75",
+  storageBucket: "idphoto-e5a75.appspot.com",
+  messagingSenderId: "925678225145",
+  appId: "1:925678225145:android:e74038cd1c14353ae8c428",
+);
 
 // --------- Student Model ---------
 class Student {
@@ -14,7 +25,11 @@ class Student {
 }
 
 // --------- Main ---------
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // ต้องเรียกก่อน runApp
+  await Firebase.initializeApp(
+    options: firebaseConfig,
+  );
   runApp(const MyApp());
 }
 
@@ -114,8 +129,8 @@ class _ListScreenState extends State<ListScreen> {
   Widget build(BuildContext context) {
     final filtered = students.where((s) {
       bool matchLevel = (level == 'ระดับชั้น') || (extractLevel(s.room) == level);
-      bool matchYear  = (year == 'ชั้นปี')     || (extractYear(s.room) == year);
-      bool matchRoom  = (room == 'ห้อง')      || (extractRoom(s.room) == room);
+      bool matchYear = (year == 'ชั้นปี') || (extractYear(s.room) == year);
+      bool matchRoom = (room == 'ห้อง') || (extractRoom(s.room) == room);
       final q = query.trim().toLowerCase();
       bool matchQuery = s.name.toLowerCase().contains(q)
           || s.id.contains(q)
