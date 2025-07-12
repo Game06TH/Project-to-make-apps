@@ -1,22 +1,22 @@
 name: easy_crop_1
 description: "A new Flutter project."
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.1
+  sdk: '>=3.8.0 <4.0.0'   # <-- ตรงนี้!
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  excel: ^2.0.4        # เพิ่ม dependency สำหรับ Excel
-  image_picker: ^0.8.5+3 # เพิ่ม dependency สำหรับ Image Picker
-  firebase_core: ^1.10.0  # เพิ่ม Firebase Core
-  firebase_auth: ^3.3.4   # เพิ่ม Firebase Authentication
-  cloud_firestore: ^3.1.0  # เพิ่ม Firestore (ถ้าต้องการ)
-  firebase_analytics: ^9.0.0  # เพิ่ม Firebase Analytics
+  excel: ^2.0.6
+  image_picker: ^1.0.7
+  firebase_core: ^2.30.0
+  firebase_auth: ^4.17.4
+  cloud_firestore: ^4.17.3
+  firebase_analytics: ^10.10.7
 
 dev_dependencies:
   flutter_test:
@@ -26,5 +26,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/students_by_class_fixed.xlsx  # Path for Excel file
-    - assets/mylogo.png                   # Path for logo
+    - assets/students_by_class_fixed.xlsx
+    - assets/mylogo.png
