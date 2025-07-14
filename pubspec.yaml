@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.8.0 <4.0.0'   # <-- ตรงนี้!
+  sdk: '>=3.8.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -15,6 +15,7 @@ dependencies:
   image_picker: ^1.0.7
   firebase_core: ^2.30.0
   firebase_auth: ^4.17.4
+  firebase_storage: ^11.6.6
   cloud_firestore: ^4.17.3
   firebase_analytics: ^10.10.7
 
@@ -28,3 +29,4 @@ flutter:
   assets:
     - assets/students_by_class_fixed.xlsx
     - assets/mylogo.png
+    - assets/fantasy_bg.png
